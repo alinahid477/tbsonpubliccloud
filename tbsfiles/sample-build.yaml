@@ -1,0 +1,15 @@
+apiVersion: kpack.io/v1alpha1
+kind: Image
+metadata:
+  name: calcaddservice
+  namespace: default
+spec:
+  tag: anahidcalcacr.azurecr.io/calcaddservice
+  serviceAccount: azure-registry-service-account
+  builder:
+    name: default-builder
+    kind: Builder
+  source:
+    git:
+      url: https://github.com/alinahid477/vmw-calculator-addservice.git
+      revision: main
