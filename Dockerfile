@@ -26,8 +26,9 @@ RUN apt-get update && apt-get install -y \
 	&& curl -L https://github.com/wercker/stern/releases/download/$(curl -s https://api.github.com/repos/wercker/stern/releases/latest | grep tag_name | cut -d '"' -f 4)/stern_linux_amd64 -o /usr/local/bin/stern \
 	&& chmod +x /usr/local/bin/stern
 
-# RUN curl -L https://carvel.dev/install.sh | bash
-RUN curl -L https://raw.githubusercontent.com/alinahid477/VMW/main/tbs/carvel/install.sh | bash
+
+# RUN curl -L https://raw.githubusercontent.com/alinahid477/VMW/main/tbs/carvel/install.sh | bash
+RUN curl -L https://carvel.dev/install.sh | bash
 RUN curl -sSL https://get.docker.com/ | sh
 
 COPY tbsfiles/default-builder.yaml /usr/local/

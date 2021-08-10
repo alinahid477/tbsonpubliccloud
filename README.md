@@ -35,11 +35,11 @@ You will need login into Tanzu Net to accept EULA when you download the below in
 
 
 **TBS Descriptor**
-`tbsfiles/descriptor.yaml` may need updating (The one in this repo is version 100.0.24). Download updated descriptor from https://network.pivotal.io/products/tbs-dependencies/ and rename to descriptor.yaml (eg `mv ~/Downloads/description-100.0.xx.yaml tbsfiles/descriptor.yaml`)
+`tbsfiles/descriptor.yaml` may need updating (The one in this repo is version 100.0.24). Download updated descriptor from https://network.pivotal.io/products/tbs-dependencies/ and rename to descriptor.yaml (eg `mv ~/Downloads/descriptor-100.0.xx.yaml tbsfiles/descriptor.yaml`)
 
 
 **files requirements:**
-- bianaries/tmc ---> This is optional. Needed only if you are accessing cluster through the TMC kubeconfig then download the tmc binary and place it in the bianaries directory.
+- bianaries/tmc ---> This is optional. Needed only if you are accessing cluster through the TMC kubeconfig then download the tmc binary and place it in the bianaries directory. If tmc cli is not needed please comment the lines (#39, #40) in the `Dockerfile`.
 - binaries/kp ---> download `kp-linux` from https://network.pivotal.io/products/build-service/ into binaries directory and rename to kp (`mv ~/Downloads/kp-linux binaries/kp`)
 
 
@@ -51,7 +51,7 @@ You will need login into Tanzu Net to accept EULA when you download the below in
 A Kubeconfig file is needed to access the cluster. In this case:
 - I created the cluster using Tanzu Mission Control (TMC)
 - Downlaod the kubeconfig file from TMC
-- and place it in .kube folder of this.
+- ***Place the configuration in a file named `config` in the `.kube` folder.***
 - You may also want to have the TMC apitoken handy. I placed it in an env file that I did not commit.
 
 
@@ -69,7 +69,7 @@ And populate the below values:
 - BUILD_SERVICE_VERSION={build service version. eg: 1.2.1}
 - BUILT_REGISTRY={the url of the registry where you want the build service to store built images}
 - BUILT_REGISTRY_USERNAME={username of the above registry}
-- REGISTRY_PASSWORD="{password against the above username}"
+- BUILT_REGISTRY_PASSWORD="{password against the above username}"
 
 
 ## Install TBS on k8s cluster
@@ -81,8 +81,8 @@ The docker file
 All you need to do is run.
 
 ```
-docker build . -t tbsinstall
-docker run -it --rm -v ${PWD}:/root/ -v /var/run/docker.sock:/var/run/docker.sock --name tbsinstall tbsinstall /bin/bash
+docker build . -t tbsonpubliccloud
+docker run -it --rm -v ${PWD}:/root/ -v /var/run/docker.sock:/var/run/docker.sock --name tbsonpubliccloud tbsonpubliccloud /bin/bash
 ```
 
 The build command will build the docker container with all necessary elements for TBS installation on your k8s cluster.

@@ -6,6 +6,8 @@
 .local
 .azure
 .ssh
+.bak
+.nogit
 
 .docker/*
 !.docker/.gitkeep
