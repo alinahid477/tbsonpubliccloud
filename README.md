@@ -26,6 +26,7 @@ This docker container is bootstrapped with TBS version 1.2.
 At the time of writing/creating this tbs 1.2 was the latest version. 
 
 **Tanzu net access**
+
 For this installation you will need access to registry.pivotal.io which is now under VMware Tanzu Network.
 - If you already have access then please login  
 OR
@@ -37,6 +38,7 @@ You will need login into Tanzu Net to accept EULA when you download the below in
 
 
 **TBS Descriptor**
+
 `tbsfiles/descriptor.yaml` may need updating (The one in this repo is version 100.0.24). Download updated descriptor from https://network.pivotal.io/products/tbs-dependencies/ and rename to descriptor.yaml (eg `mv ~/Downloads/descriptor-100.0.xx.yaml tbsfiles/descriptor.yaml`)
 
 
@@ -50,6 +52,7 @@ You will need login into Tanzu Net to accept EULA when you download the below in
 - OR, use an existing one to deploy TBS on it
 
 **K8S Cluster access:**
+
 A Kubeconfig file is needed to access the cluster. In this case:
 - I created the cluster using Tanzu Mission Control (TMC)
 - Downlaod the kubeconfig file from TMC
