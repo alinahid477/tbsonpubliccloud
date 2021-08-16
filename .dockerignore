@@ -4,3 +4,4 @@
 .docker
 .docker/config.json
 .vmware-cna-saas
+.images
