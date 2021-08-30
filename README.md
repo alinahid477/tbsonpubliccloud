@@ -75,6 +75,7 @@ And populate the below values:
 - BUILT_REGISTRY={the url of the registry where you want the build service to store built images}
 - BUILT_REGISTRY_USERNAME={username of the above registry}
 - BUILT_REGISTRY_PASSWORD="{password against the above username}"
+- TMC_API_TOKEN={needed if using TMC to access k8s cluster}
 
 
 ## Install TBS on k8s cluster
