@@ -16,13 +16,8 @@ RUN apt-get update && apt-get install -y \
 	nano \
 	net-tools \
 	libdigest-sha-perl \
-	# groff \
 	&& curl -L https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl \
 	&& chmod +x /usr/local/bin/kubectl \
-	# && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
-    # && unzip awscliv2.zip \
-    # && ./aws/install \
-    # && rm -rf awscliv2.zip \
 	&& curl -L https://github.com/wercker/stern/releases/download/$(curl -s https://api.github.com/repos/wercker/stern/releases/latest | grep tag_name | cut -d '"' -f 4)/stern_linux_amd64 -o /usr/local/bin/stern \
 	&& chmod +x /usr/local/bin/stern
 
