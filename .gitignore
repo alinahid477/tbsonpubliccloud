@@ -16,6 +16,7 @@
 binaries/*
 !binaries/.gitkeep
 !binaries/tbsinstall.sh
+!binaries/tbsbuilderwizard.sh
 .vmware-cna-saas
 tbsfiles/*
 !tbsfiles/*.yaml
