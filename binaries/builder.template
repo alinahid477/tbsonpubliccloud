@@ -3,6 +3,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: BUILDER_SERVICE_ACCOUNT_NAME
+  namespace: TBS_BUILDER_NAMESPACE
 secrets:
 BUILDER_SECRETS
 imagePullSecrets:

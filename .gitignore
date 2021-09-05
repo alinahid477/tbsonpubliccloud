@@ -22,5 +22,5 @@ binaries/*
 !binaries/builder.template
 .vmware-cna-saas
 tbsfiles/*
-!tbsfiles/*.yaml
+!tbsfiles/descriptor.yaml
 !tbsfiles/*.sample

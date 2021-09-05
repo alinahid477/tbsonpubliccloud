@@ -4,6 +4,7 @@ helpFunction()
 {
     printf "\nProvide valid params\n\n"
     echo "Usage: ~/baniries/tbsbuilderwizard.sh"
+    echo -e "\t-w | --wizard Lauch TBS Builder in interactive wizard mode"
     echo -e "\t-n | --name TBS Builder name"
     echo -e "\t-k | --k8s-namespace TBS Builder namespace"
     echo -e "\t-t | --tag for TBS Builder image tag"
@@ -15,20 +16,24 @@ helpFunction()
     # exit 1 # Exit script after printing help
 }
 
-
 output=""
 
 # read the options
-TEMP=`getopt -o n:k:i:g:s:c:o: --long name:,k8s-namespace:,image-registry-secret-name:,git-secret-name:,cluster-stack:,cluster-store:,order:,help,printhelp -n $0 -- "$@"`
+TEMP=`getopt -o wn:k:i:g:s:c:o: --long wizard,name:,k8s-namespace:,image-registry-secret-name:,git-secret-name:,cluster-stack:,cluster-store:,order:,help,printhelp -n $0 -- "$@"`
 eval set -- "$TEMP"
 # echo $TEMP;
 while true ; do
     # echo "here -- $1"
     case "$1" in
+        -w | --wizard )
+            case "$2" in
+                "" ) output=$(printf "$output\nwizardmode=y") ; shift 2 ;;
+                * ) output=$(printf "$output\nwizardmode=y") ; shift 2 ;;
+            esac ;;       
         -n | --name )
             case "$2" in
                 "" ) output=$(printf "$output\ndefaultvalue_name=") ; shift 2 ;;
-                * ) output=$(printf "$output\nndefaultvalue_name=$2") ; shift 2 ;;
+                * ) output=$(printf "$output\ndefaultvalue_name=$2") ; shift 2 ;;
             esac ;;
         -k | --k8s-namespace )
             case "$2" in
@@ -73,4 +78,4 @@ while true ; do
 done
 
 
-printf $output
+printf "$output"

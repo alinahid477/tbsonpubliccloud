@@ -77,13 +77,15 @@ then
     fi
     if [[ $inp2 == "y" ]]
     then
-        printf "\n\nLaunching TBS Builder Wizard...\n\n"
-        source ~/binaries/tbsbuilderwizard.sh -n default-builder
+        printf "\n\nLaunching TBS Builder Wizard to create default-builder in namespace: default...\n\n"
+        source ~/binaries/tbsbuilderwizard.sh -n default-builder -k default --wizard
     fi
 fi
 
 printf "\nYour available wizards are:\n"
 echo -e "\t~/binaries/tbsinstall.sh"
 echo -e "\t~/binaries/tbsbuilderwizard.sh --help"
+
+cd ~
 
 /bin/bash

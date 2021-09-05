@@ -2,12 +2,35 @@
 unset RESITRY_TYPE
 unset REGISTRY_URL
 unset GIT_URL
+unset BUILDER_NAME
+unset BUILDER_NAMESPACE
+unset TBS_BUILDER_IMAGE_TAG
+unset TBS_CLUSTERSTACK_NAME
+unset TBS_CLUSTERSTORE_NAME
+unset TBS_BUILDER_IMAGE_REGISTRY_SECRET
+unset TBS_BUILDER_GIT_SECRET
+
+result=$(source ~/binaries/readparams.sh $@)
 if [[ $result == *@("error"|"help")* ]]
 then
     source ~/binaries/readparams.sh --printhelp
     exit
 else
     export $(echo $result | xargs)
+fi
+
+if [[ -z $wizardmode ]]
+then
+    if [[ -z $defaultvalue_name || -z $defaultvalue_k8s_namespace || 
+        -z $defaultvalue_tag || -z $defaultvalue_order ||
+        -z $defaultvalue_cluster_stack || -z $defaultvalue_cluster_store ||
+        -z $defaultvalue_image_registry_secret_name || -z $defaultvalue_git_secret_name ]]
+    then
+        printf "\n\nOne or more required value missing. Validation failed.\nconsider running in wizard mode using -w flag\n"
+        source ~/binaries/readparams.sh --printhelp
+        printf "\n\nexit..\n\n"
+        exit
+    fi
 fi
 
 
@@ -38,6 +61,7 @@ then
 else
     BUILDER_NAME=$defaultvalue_name
 fi
+printf "\nAccepted parameter BUILDER_NAME=$BUILDER_NAME\n"
 
 printf "\n\n"
 
@@ -48,7 +72,12 @@ then
     printf "\nHint:"
     echo -e "\tIf the namespace already exist the wizard will use the existing"
     echo -e "\tOtherwise it will create a new one"
-    while true; do
+    echo -e "\t\t"
+    echo -e "\tDEFAULT: default (hit enter to accept default)"
+fi
+while true; do
+    if [[ -z $defaultvalue_k8s_namespace ]]
+    then
         read -p "TBS Builder Namespace: " inp
         if [[ -z $inp ]]
         then
@@ -56,25 +85,29 @@ then
         else
             if [[ ! $inp =~ ^[A-Za-z0-9_\-]+$ ]]
             then
-                printf "\nYou must provide a valid value.\n"
-            else
-                isexist=$(kubectl get ns | grep -w $inp)
-                if [[ -z $isexist ]]
-                then
-                    printf "\nNamespace name $inp does not exist. Attempting to create...\n\n"
-                    kubectl create namespace $inp
-                    printf "\n\nDONE\n"
-                else
-                    printf "\nNamespace name $inp exists. Using existing...\n"
-                fi
-                BUILDER_NAMESPACE=$inp
-                break
+                printf "\nYou must provide a valid value.\n"                
             fi
         fi
-    done
-else
-    BUILDER_NAMESPACE=$defaultvalue_k8s_namespace
-fi
+    else
+        inp=$defaultvalue_k8s_namespace
+    fi
+    if [[ -n $inp ]]
+    then
+        isexist=$(kubectl get ns | grep -w $inp)
+        if [[ -z $isexist ]]
+        then
+            printf "\nNamespace name $inp does not exist. Attempting to create...\n\n"
+            kubectl create namespace $inp
+            printf "\n\nDONE\n"
+        else
+            printf "\nNamespace name $inp exists. Using existing...\n"
+        fi
+        BUILDER_NAMESPACE=$inp
+        break
+    fi
+done
+printf "\nAccepted parameter BUILDER_NAMESPACE=$BUILDER_NAMESPACE\n"
+
 
 printf "\n\n"
 
@@ -107,6 +140,7 @@ then
 else
     TBS_CLUSTERSTACK_NAME=$defaultvalue_cluster_stack
 fi
+printf "\nAccepted parameter TBS_CLUSTERSTACK_NAME=$TBS_CLUSTERSTACK_NAME\n"
 
 printf "\n\n"
 
@@ -139,6 +173,7 @@ then
 else
     TBS_CLUSTERSTORE_NAME=$defaultvalue_cluster_store
 fi
+printf "\nAccepted parameter TBS_CLUSTERSTORE_NAME=$TBS_CLUSTERSTORE_NAME\n"
 
 printf "\n\n"
 
@@ -153,6 +188,7 @@ then
     echo -e "\tMultiple values needs to be provided in comma-separated format."
     echo -e "\tThe way the values are appearing are the order they will be detected."
     echo -e "\tHit enter to accept default and its order."
+    echo -e "\t\t"
     printf "DEFAULT: $defaultbuildorder\n"
 fi
 
@@ -177,16 +213,16 @@ while true; do
         tval=$(echo $language | sed 's,^ *,,; s, *$,,')
         if [[ $language == *\/* ]] 
         then
-            TBS_BUILDER_BUILD_ORDER+="\n\t- group:\n\t\t- id: $tval"
+            TBS_BUILDER_BUILD_ORDER+="\n  - group:\n    - id: $tval"
         else
             printf "Checking $tval\n"
             if grep -q "${tval}" <<< "$defaultbuildorder"
             then
                 if [[ $tval == "procfile" ]]
                 then
-                    TBS_BUILDER_BUILD_ORDER+="\n\t- group:\n\t\t- id: paketo-buildpacks/$tval"
+                    TBS_BUILDER_BUILD_ORDER+="\n  - group:\n    - id: paketo-buildpacks/$tval"
                 else
-                    TBS_BUILDER_BUILD_ORDER+="\n\t- group:\n\t\t- id: tanzu-buildpacks/$tval"
+                    TBS_BUILDER_BUILD_ORDER+="\n  - group:\n    - id: tanzu-buildpacks/$tval"
                 fi 
             else
                 printf "\n\nYou must provide a valid value.\n\n"
@@ -209,7 +245,7 @@ while true; do
         fi  
     fi
 done
-
+printf "\nAccepted parameter TBS_BUILDER_BUILD_ORDER=$TBS_BUILDER_BUILD_ORDER\n"
 
 printf "\n\n"
 
@@ -218,14 +254,18 @@ then
     printf "\nWhich image registry would you like to connect to.."
     printf "\nHint:"
     echo -e "\tLeave empty for dockerhub. Hit enter to leave empty."
-    echo -e "\tProvide path to .json or .p12 (GCP Service Account File) file for GCR (Google Container Registry). eg: ~/tbsfiles/projmerlin-325002-936c605cc234.json"
-    echo -e "\tFor any other registry type enter url of the image registry that you would use for docker push. eg: my-pvt-harbor.wizard.com/projectmerlin or projectmerlin.azurecr.io etc"
+    echo -e "\tOR"
+    echo -e "\tProvide path to .json or .p12 (GCP Service Account File) file for GCR (Google Container Registry)."
+    echo -e "\t\teg: ~/tbsfiles/projmerlin-325002-936c605cc234.json"
+    echo -e "\tOR"
+    echo -e "\tFor any other registry enter url of the image registry that you would use for docker push."
+    echo -e "\t\teg: my-pvt-harbor.wizard.com/projectmerlin or projectmerlin.azurecr.io etc"
     dobreak="n"
     while true; do
 
         if [[ -z $RESITRY_TYPE ]]
         then
-            read -p "Registry URL:(press enter to keep to leave it empty for dockerhub) " inp
+            read -p "Registry URL: " inp
             if [ -z "$inp" ]
             then
                 RESITRY_TYPE="--dockerhub"
@@ -265,22 +305,37 @@ then
                     break
                 fi
             done
-            prompt="Dockerhub password "
             while true; do
+                unset inp
+                prompt="Dockerhub password: "
+                charcount=0
                 while IFS= read -p "$prompt" -r -s -n 1 char
                 do
                     if [[ $char == $'\0' ]]
                     then
                         break
                     fi
-                    prompt='*'
-                    inp+="$char"
+                    if [[ $char == $'\177' ]]
+                    then
+                        if [[ $charcount > 0 ]]
+                        then
+                            inp=${inp%?}
+                            prompt=$'\b \b'
+                            ((charcount=charcount-1))
+                        else
+                            prompt=''
+                        fi
+                    else
+                        prompt='*'
+                        inp+="$char"
+                        ((charcount=charcount+1))
+                    fi        
                 done
                 if [[ -z $inp ]]
                 then
                     printf "\nThis is a required field. You must provide a value.\n"
                 else
-                    DOCKER_PASSWORD=$inp
+                    export DOCKER_PASSWORD=$(echo $inp | xargs)
                     dobreak="y"
                     printf "\n\nAccepted Dockerhub registry with ID: $DOCKERHUB_ID\n"
                     break
@@ -303,22 +358,39 @@ then
                     break
                 fi
             done
-            prompt="Registry password "
+            
             while true; do
+                unset inp
+                prompt="Registry password: "
+                charcount=0
                 while IFS= read -p "$prompt" -r -s -n 1 char
                 do
                     if [[ $char == $'\0' ]]
                     then
                         break
                     fi
-                    prompt='*'
-                    inp+="$char"
+                    if [[ $char == $'\177' ]]
+                    then
+                        if [[ $charcount > 0 ]]
+                        then
+                            inp=${inp%?}
+                            prompt=$'\b \b'
+                            ((charcount=charcount-1))
+                        else
+                            prompt=''
+                        fi
+                    else
+                        prompt='*'
+                        inp+="$char"
+                        ((charcount=charcount+1))
+                    fi        
                 done
+                
                 if [[ -z $inp ]]
                 then
                     printf "\nThis is a required field. You must provide a value.\n"
                 else
-                    REGISTRY_PASSWORD=$inp
+                    export REGISTRY_PASSWORD=$(echo "$inp" | xargs)
                     dobreak="y"
                     printf "\n\nAccepted private registry with: $REGISTRY_USER @ $REGISTRY_URL\n"
                     break
@@ -326,7 +398,7 @@ then
             done
         fi
         
-        if [[ dobreak == "y" ]]
+        if [[ $dobreak == "y" ]]
         then
             break
         else
@@ -344,34 +416,37 @@ then
         $projectid=$(cat $GCR_SERVICE_ACCOUNT_PATH | jq -r ".project_id")
         TBS_BUILDER_IMAGE_TAG=gcr.io/$projectid/$BUILDER_NAME
         
-        printf "\n\nCreating k8s secret for GCR...\n\n"
-        printf "kp secret create $TBS_BUILDER_IMAGE_REGISTRY_SECRET --gcr"
-        # kp secret create $TBS_BUILDER_IMAGE_REGISTRY_SECRET --gcr
+        #printf "\n\nCreating k8s secret for GCR...\n\n"
+        #printf "kp secret create $TBS_BUILDER_IMAGE_REGISTRY_SECRET --gcr"
+        #kp secret create $TBS_BUILDER_IMAGE_REGISTRY_SECRET --gcr
     fi
     if [[ $RESITRY_TYPE == "--dockerhub" && -n $DOCKERHUB_ID && -n $DOCKER_PASSWORD ]]
     then
         TBS_BUILDER_IMAGE_TAG=$DOCKERHUB_ID/$BUILDER_NAME
 
-        printf "\n\nCreating k8s secret for Dockerhub...\n\n"
-        printf "kp secret create $TBS_BUILDER_IMAGE_REGISTRY_SECRET --dockerhub $DOCKERHUB_ID"
-        # kp secret create $TBS_BUILDER_IMAGE_REGISTRY_SECRET --dockerhub $DOCKERHUB_ID
+        #printf "\n\nCreating k8s secret for Dockerhub...\n\n"
+        #printf "kp secret create $TBS_BUILDER_IMAGE_REGISTRY_SECRET --dockerhub $DOCKERHUB_ID"
+        #kp secret create $TBS_BUILDER_IMAGE_REGISTRY_SECRET --dockerhub $DOCKERHUB_ID
     fi
     if [[ $RESITRY_TYPE == "--registry" && -n $REGISTRY_URL && -n $REGISTRY_USER && -n $REGISTRY_PASSWORD ]]
     then
         TBS_BUILDER_IMAGE_TAG=$REGISTRY_URL/$BUILDER_NAME
 
-        printf "\n\nCreating k8s secret for Image Registry...\n\n"
-        printf "kp secret create $TBS_BUILDER_IMAGE_REGISTRY_SECRET --registry $REGISTRY_URL --registry-user $REGISTRY_USER"
-        # kp secret create $TBS_BUILDER_IMAGE_REGISTRY_SECRET --registry $REGISTRY_URL --registry-user $REGISTRY_USER
+        #printf "\n\nCreating k8s secret for Image Registry...\n\n"
+        # printf "kp secret create $TBS_BUILDER_IMAGE_REGISTRY_SECRET --registry $REGISTRY_URL --registry-user $REGISTRY_USER"
+        #kp secret create $TBS_BUILDER_IMAGE_REGISTRY_SECRET --registry $REGISTRY_URL --registry-user $REGISTRY_USER
     fi
 else
     TBS_BUILDER_IMAGE_REGISTRY_SECRET=$defaultvalue_image_registry_secret_name
 fi
+printf "\nAccepted parameter TBS_BUILDER_IMAGE_REGISTRY_SECRET=$TBS_BUILDER_IMAGE_REGISTRY_SECRET\n"
 
 if [[ -n $defaultvalue_tag ]]
 then
     TBS_BUILDER_IMAGE_TAG=$defaultvalue_tag
 fi
+printf "\nAccepted parameter TBS_BUILDER_IMAGE_TAG=$TBS_BUILDER_IMAGE_TAG\n"
+
 
 printf "\n\n"
 
@@ -381,8 +456,15 @@ then
     printf "\nWhich source code repository would you like to connect to.."
     printf "\nHint:"
     echo -e "\tType 'public' if it is a public repository and does not require authentication"
-    echo -e "\tProvide URL of the source code repository in the format of git@repourl.com for ssh key file based authentication. eg: git@github.com or git@bitbucket.org etc"
-    echo -e "\tOR Provide URL of the source code repository in the format of https://domainname.com for username password based authentication. eg: https://github.com or https://bitbucket.org"
+    echo -e "\tOR"
+    echo -e "\tProvide URL of the source code repository in the format of git@repourl.com for ssh key file based authentication."
+    echo -e "\t\teg: for github: git@github.com or for bitbucket:git@bitbucket.org or etc"
+    echo -e "\tOR"
+    echo -e "\tProvide URL of the source code repository in the format of https://domainname.com for username password based authentication."
+    echo -e "\t\teg: for github type https://github.com"
+    echo -e "\t\tOR for bitbucket type https://bitbucket.org etc"
+    echo -e "\t\t"
+    echo -e "\tDEFAULT: https://github.com (hit enter to accept default)"
     dobreak="n"
 
     while true; do
@@ -391,7 +473,7 @@ then
             read -p "Source code repository URL: " inp
             if [ -z "$inp" ]
             then
-                printf "\nThis is a required field. You must provide a value.\n"
+                GIT_URL="https://github.com"
             else 
                 GIT_URL=$inp
             fi  
@@ -409,7 +491,7 @@ then
             break
         fi
 
-        if [[ GIT_AUTH_TYPE == "ssh" ]]
+        if [[ $GIT_AUTH_TYPE == "ssh" ]]
         then
             while true; do
                 read -p "ssh private key file path: " inp
@@ -435,10 +517,10 @@ then
         unset inp
         unset GIT_USERNAME
         unset GIT_PASSWORD
-        if [[ GIT_AUTH_TYPE == "basic" ]]
+        if [[ $GIT_AUTH_TYPE == "basic" ]]
         then
             while true; do
-                read -p "Username: " inp
+                read -p "GIT Username: " inp
                 if [[ -z $inp ]]
                 then
                     printf "\nThis is a required field. You must provide a value.\n"
@@ -447,29 +529,45 @@ then
                     break
                 fi
             done
-            prompt="Password "
+            
             while true; do
+                unset inp
+                prompt="GIT Password: "
+                charcount=0
                 while IFS= read -p "$prompt" -r -s -n 1 char
                 do
                     if [[ $char == $'\0' ]]
                     then
                         break
                     fi
-                    prompt='*'
-                    inp+="$char"
+                    if [[ $char == $'\177' ]]
+                    then
+                        if [[ $charcount > 0 ]]
+                        then
+                            inp=${inp%?}
+                            prompt=$'\b \b'
+                            ((charcount=charcount-1))
+                        else
+                            prompt=''
+                        fi
+                    else
+                        prompt='*'
+                        inp+="$char"
+                        ((charcount=charcount+1))
+                    fi        
                 done
                 if [[ -z $inp ]]
                 then
                     printf "\nThis is a required field. You must provide a value.\n"
                 else
-                    GIT_PASSWORD=$inp
+                    export GIT_PASSWORD=$(echo "$inp" | xargs)
                     dobreak="y"
                     break
                 fi
             done
         fi
 
-        if [[ dobreak == "y" ]]
+        if [[ $dobreak == "y" ]]
         then
             break
         else
@@ -483,22 +581,10 @@ then
     done
 
     TBS_BUILDER_GIT_SECRET=$BUILDER_NAME-git-cred
-    if [[ GIT_AUTH_TYPE == "ssh" && -n $GIT_URL && -n $GIT_SSH_FILE_PATH ]]
-    then
-        printf "\n\nCreating k8s secret for Source code repository...\n\n"
-        printf "kp secret create $TBS_BUILDER_GIT_SECRET --git-url $GIT_URL --git-ssh-key $GIT_SSH_FILE_PATH"
-        # kp secret create $TBS_BUILDER_GIT_SECRET --git-url $GIT_URL --git-ssh-key $GIT_SSH_FILE_PATH
-    fi
-    if [[ GIT_AUTH_TYPE == "basic" && -n $GIT_URL && -n $GIT_USERNAME -n $GIT_PASSWORD ]]
-    then
-        printf "\n\nCreating k8s secret for Source code repository...\n\n"
-        printf "kp secret create $TBS_BUILDER_GIT_SECRET --git-url $GIT_URL --git-user $GIT_USERNAME"
-        # kp secret create $TBS_BUILDER_GIT_SECRET --git-url $GIT_URL --git-user $GIT_USERNAME
-    fi
 else
     TBS_BUILDER_GIT_SECRET=$defaultvalue_git_secret_name
 fi
-
+printf "\nAccepted parameter TBS_BUILDER_GIT_SECRET=$TBS_BUILDER_GIT_SECRET\n"
 
 
 printf "\n\n"
@@ -516,8 +602,8 @@ printf "\n\n"
 
 
 if [[ -z $BUILDER_NAME || -z $BUILDER_NAMESPACE || -z $TBS_BUILDER_IMAGE_TAG ||
-    -z $TBS_CLUSTERSTACK_NAME || -z $TBS_CLUSTERSTORE_NAME ||
-    -z $TBS_BUILDER_IMAGE_REGISTRY_SECRET || -z $TBS_BUILDER_GIT_SECRET || ]]
+    -z $TBS_CLUSTERSTACK_NAME || -z $TBS_CLUSTERSTORE_NAME || -z $TBS_BUILDER_BUILD_ORDER ||
+    -z $TBS_BUILDER_IMAGE_REGISTRY_SECRET || -z $TBS_BUILDER_GIT_SECRET ]]
 then
     printf "\n\nOne or more missing required value found. Validation failed. Exit..\n\n"
     exit 1;
@@ -529,48 +615,108 @@ printf "\n\n******Creating cluster builder $BUILDER_NAME*******\n\n"
 printf "\n\nCreating builder file /tmp/$BUILDER_NAME.yaml\n\n"
 cp /usr/local/builder.template /tmp/$BUILDER_NAME.yaml
 
+sleep 1
 
 printf "\n\nMapping service account named $BUILDER_NAME-sa in builder file /tmp/$BUILDER_NAME.yaml\n\n"
-sed -ri 's/^(\s*)(name\s*:\s*BUILDER_SERVICE_ACCOUNT_NAME\s*$)/\name: '$BUILDER_NAME'-sa/' /tmp/$BUILDER_NAME.yaml
-sed -ri 's/^(\s*)(serviceAccount\s*:\s*BUILDER_SERVICE_ACCOUNT_NAME\s*$)/\serviceAccount: '$BUILDER_NAME'-sa/' /tmp/$BUILDER_NAME.yaml
+sed -i '/BUILDER_SERVICE_ACCOUNT_NAME/s//'$BUILDER_NAME'-sa/' /tmp/$BUILDER_NAME.yaml
+# sed -ri 's/^(\s*)(name\s*:\s*BUILDER_SERVICE_ACCOUNT_NAME\s*$)/\name: '$BUILDER_NAME'-sa/' /tmp/$BUILDER_NAME.yaml
+# sed -ri 's/^(\s*)(serviceAccount\s*:\s*BUILDER_SERVICE_ACCOUNT_NAME\s*$)/\serviceAccount: '$BUILDER_NAME'-sa/' /tmp/$BUILDER_NAME.yaml
 
-printf "\n\nMapping secrets $TBS_BUILDER_IMAGE_REGISTRY_SECRET and $TBS_BUILDER_GIT_SECRET in builder file /tmp/$BUILDER_NAME.yaml\n\n"
-if [[ $TBS_BUILDER_GIT_SECRET == "public" ]]
+sleep 1
+
+
+if [[ $TBS_BUILDER_GIT_SECRET != "public" ]]
 then
-    secrets="- name: $TBS_BUILDER_IMAGE_REGISTRY_SECRET\n- name: $TBS_BUILDER_GIT_SECRET"
+    printf "\n\nMapping secrets $TBS_BUILDER_IMAGE_REGISTRY_SECRET and $TBS_BUILDER_GIT_SECRET in builder file /tmp/$BUILDER_NAME.yaml\n\n"
+    secrets="- name: $TBS_BUILDER_IMAGE_REGISTRY_SECRET"
+    secrets+="\n"
+    secrets+="- name: $TBS_BUILDER_GIT_SECRET"
 else
+    printf "\n\nMapping secrets $TBS_BUILDER_IMAGE_REGISTRY_SECRET in builder file /tmp/$BUILDER_NAME.yaml\n\n"
     secrets="- name: $TBS_BUILDER_IMAGE_REGISTRY_SECRET"
 fi
+printf "\nsecrets=$secrets\n"
+sed -i 's~BUILDER_IMAGE_PULL_SECRETS~- name: '$TBS_BUILDER_IMAGE_REGISTRY_SECRET'~g' /tmp/$BUILDER_NAME.yaml
+awk -v repl="$secrets" '{sub(/BUILDER_SECRETS/,repl)}1' /tmp/$BUILDER_NAME.yaml > /tmp/temp.txt && mv /tmp/temp.txt /tmp/$BUILDER_NAME.yaml
 
-sed -i '0,/BUILDER_SECRETS/s//'$secrets'/' /tmp/$BUILDER_NAME.yaml
-sed -i '0,/BUILDER_IMAGE_PULL_SECRETS/s//- name: '$TBS_BUILDER_IMAGE_REGISTRY_SECRET'/' /tmp/$BUILDER_NAME.yaml
+sleep 1
 
 printf "\n\nMapping TBS metadata in builder file /tmp/$BUILDER_NAME.yaml\n\n"
-sed -ri 's/^(\s*)(name\s*:\s*TBS_BUILDER_NAME\s*$)/\name: '$BUILDER_NAME'/' /tmp/$BUILDER_NAME.yaml
-sed -ri 's/^(\s*)(namespace\s*:\s*BUILDER_SERVICE_ACCOUNT_NAME\s*$)/\namespace: '$BUILDER_NAMESPACE'/' /tmp/$BUILDER_NAME.yaml
-sed -ri 's/^(\s*)(tag\s*:\s*TBS_BUILDER_IMAGE_TAG\s*$)/\tag: '$TBS_BUILDER_IMAGE_TAG'/' /tmp/$BUILDER_NAME.yaml
-sed -ri 's/^(\s*)(name\s*:\s*TBS_CLUSTERSTACK_NAME\s*$)/\tag: '$TBS_CLUSTERSTACK_NAME'/' /tmp/$BUILDER_NAME.yaml
-sed -ri 's/^(\s*)(name\s*:\s*TBS_CLUSTERSTORE_NAME\s*$)/\tag: '$TBS_CLUSTERSTORE_NAME'/' /tmp/$BUILDER_NAME.yaml
-sed -ri 's/^(\s*)(order\s*:\s*TBS_BUILDER_BUILD_ORDER\s*$)/\order: '$TBS_BUILDER_BUILD_ORDER'/' /tmp/$BUILDER_NAME.yaml
+sed -i 's/TBS_BUILDER_NAMESPACE/'$BUILDER_NAMESPACE'/g' /tmp/$BUILDER_NAME.yaml
+sed -i 's/TBS_BUILDER_NAME/'$BUILDER_NAME'/g' /tmp/$BUILDER_NAME.yaml
+sed -i 's~TBS_BUILDER_IMAGE_TAG~'$TBS_BUILDER_IMAGE_TAG'~g' /tmp/$BUILDER_NAME.yaml
+sed -i '/TBS_CLUSTERSTACK_NAME/s//'$TBS_CLUSTERSTACK_NAME'/' /tmp/$BUILDER_NAME.yaml
+sed -i '/TBS_CLUSTERSTORE_NAME/s//'$TBS_CLUSTERSTORE_NAME'/' /tmp/$BUILDER_NAME.yaml
+awk -v repl="$TBS_BUILDER_BUILD_ORDER" '{sub(/TBS_BUILDER_BUILD_ORDER/,repl)}1' /tmp/$BUILDER_NAME.yaml > /tmp/temp.txt && mv /tmp/temp.txt /tmp/$BUILDER_NAME.yaml
 
-configfile=$(echo "/tmp/$BUILDER_NAME.yaml")
-if [ -d "~/tbsfiles" ]
+sleep 1
+
+configfile="~/tmp/$BUILDER_NAME.yaml"
+if [[ -d "/root/tbsfiles" && -n $wizardmode ]]
 then
     printf "\n\nAttempting to create file in ~/tbsfiles/$BUILDER_NAME.yaml\n\n"
     cp /tmp/$BUILDER_NAME.yaml ~/tbsfiles/
     chmod 755 ~/tbsfiles/$BUILDER_NAME.yaml
-
+    sleep 1
 
     while true; do
-        read -p "Review generated file ~/tbsfiles/$BUILDER_NAME.yaml and confirm or modify in the file and confirm to proceed further? [y/n] " yn
+        read -p "Review generated file ~/tbsfiles/$BUILDER_NAME.yaml and confirm or modify to proceed further? [y/n] " yn
         case $yn in
-            [Yy]* ) configfile=$(echo "~/tbsfiles/$BUILDER_NAME.yaml"); printf "\nyou confirmed yes\n"; break;;
+            [Yy]* ) approved="y"; printf "\nyou confirmed yes\n"; break;;
             [Nn]* ) printf "\n\nYou said no. \n\nExiting...\n\n"; exit;;
             * ) echo "Please answer yes or no.";;
         esac
     done
+    configfile="~/tbsfiles/$BUILDER_NAME.yaml"
 fi
 
-printf "\n\n*****Creating TBS builder $BUILDER_NAME****** from file $configfile\n\n"
-kubectl apply -f $configfile
 
+
+printf "\n\nCreating k8s secret $TBS_BUILDER_IMAGE_REGISTRY_SECRET for container regisry in namespace $BUILDER_NAMESPACE \n\n"
+if [[ $RESITRY_TYPE == "--gcr" && -n $GCR_SERVICE_ACCOUNT_PATH ]]
+then
+    #printf "kp secret create $TBS_BUILDER_IMAGE_REGISTRY_SECRET --gcr"
+    kp secret create $TBS_BUILDER_IMAGE_REGISTRY_SECRET --gcr -n $BUILDER_NAMESPACE
+fi
+if [[ $RESITRY_TYPE == "--dockerhub" && -n $DOCKERHUB_ID && -n $DOCKER_PASSWORD ]]
+then
+    #printf "kp secret create $TBS_BUILDER_IMAGE_REGISTRY_SECRET --dockerhub $DOCKERHUB_ID"
+    kp secret create $TBS_BUILDER_IMAGE_REGISTRY_SECRET --dockerhub $DOCKERHUB_ID -n $BUILDER_NAMESPACE
+fi
+if [[ $RESITRY_TYPE == "--registry" && -n $REGISTRY_URL && -n $REGISTRY_USER && -n $REGISTRY_PASSWORD ]]
+then
+    # printf "kp secret create $TBS_BUILDER_IMAGE_REGISTRY_SECRET --registry $REGISTRY_URL --registry-user $REGISTRY_USER"
+    kp secret create $TBS_BUILDER_IMAGE_REGISTRY_SECRET --registry $REGISTRY_URL --registry-user $REGISTRY_USER -n $BUILDER_NAMESPACE
+fi
+
+printf "\n\nCreating k8s secret $TBS_BUILDER_GIT_SECRET for Source code repository in namespace $BUILDER_NAMESPACE...\n\n"
+if [[ $GIT_AUTH_TYPE == "ssh" && -n $GIT_URL && -n $GIT_SSH_FILE_PATH ]]
+then    
+    # printf "kp secret create $TBS_BUILDER_GIT_SECRET --git-url $GIT_URL --git-ssh-key $GIT_SSH_FILE_PATH"
+    kp secret create $TBS_BUILDER_GIT_SECRET --git-url $GIT_URL --git-ssh-key $GIT_SSH_FILE_PATH -n $BUILDER_NAMESPACE
+fi
+if [[ $GIT_AUTH_TYPE == "basic" && -n $GIT_URL && -n $GIT_USERNAME && -n $GIT_PASSWORD ]]
+then
+    # printf "kp secret create $TBS_BUILDER_GIT_SECRET --git-url $GIT_URL --git-user $GIT_USERNAME"
+    kp secret create $TBS_BUILDER_GIT_SECRET --git-url $GIT_URL --git-user $GIT_USERNAME -n $BUILDER_NAMESPACE
+fi
+
+printf "\n\nCreating TBS builder $BUILDER_NAME from file $configfile\n\n"
+if [[ $approved == "y" ]]
+then
+    kubectl apply -f ~/tbsfiles/$BUILDER_NAME.yaml
+else
+    kubectl apply -f /tmp/$BUILDER_NAME.yaml
+fi
+
+wait=30
+printf "\n\nWaiting $wait sec\n\n"
+sleep $wait
+
+printf "\n\nChecking status:\n"
+kp builder status $BUILDER_NAME -n $BUILDER_NAMESPACE
+
+printf "\n\n"
+printf "***********\n"
+printf "*   END   *\n"
+printf "***********\n"
