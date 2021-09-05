@@ -9,15 +9,16 @@ The official guide to install TBS is here: https://docs.pivotal.io/build-service
 However, There're a lot of steps to get TBS going in a k8s cluster.
 
 In this repository I have created a bootstraped docker container that will
-- On the first run will install TBS on a K8S cluster, saving you at least 4-5 hours worth of tasks and lots of binaries installtion on your host machine.
-- Then give you shell access (from 2nd run onwards) for interacting with the TBS on a k8s cluster as well as the k8s cluster itself. 
+- On the first run will launch tbsinstall wizard. This will install/deploy TBS on a K8S cluster, saving you at least 4-5 hours worth of tasks and lots of binaries installtion on your host machine.
+- Provide you with an intuitive UI to deploy TBS Builder (`~/binaries/tbsbuilderwizard --help`). This wizard can also work via parameters. This makes this docker suitable for pipeline automation too.
+- It also provides you bash access (from 2nd run onwards) for interacting with the TBS on a k8s cluster as well as the k8s cluster itself. 
 
 ***This should simplify the Day0 tasks of installing a TBS on a k8s cluster.***
 
 **Please note:** *This installer does not work with ECR*
 
 ## Pre-Requisit
-The host computer with docker-ce installed.
+The host computer with docker-ce or docker-ee installed.
 
 
 ## Prepare
@@ -51,13 +52,11 @@ You will need login into Tanzu Net to accept EULA when you download the below in
 - Either create a dedicated cluster for TBS (using TMC, TKG, EKS, AKS, GKE)
 - OR, use an existing one to deploy TBS on it
 
-**K8S Cluster access:**
+**kubeconfig file**
 
 A Kubeconfig file is needed to access the cluster. In this case:
-- I created the cluster using Tanzu Mission Control (TMC)
-- Downlaod the kubeconfig file from TMC
-- ***Place the configuration in a file named `config` in the `.kube` folder.***
-- You may also want to have the TMC apitoken handy. I placed it in an env file that I did not commit.
+- I created the cluster using Tanzu Mission Control (TMC), hence I Downlaod the kubeconfig file from TMC and added TMC_API_TOKEN in .env file. *You can generate yours withever way suits best*
+- ***Place the kubeconfig in a file named `config` in the `.kube` folder. Filenale MUST be 'config' (no extension).***
 
 
 **.env file**
@@ -66,16 +65,13 @@ Rename the .env.sample to .env. (eg: `mv .env.sample .env`)
 
 And populate the below values:
 
-- PIVOTAL_REGISTRY_USERNAME="{tanzu net username}"
-- PIVOTAL_REGISTRY_PASSWORD="{tanzu net username}"
+- TANZUNET_USERNAME="{tanzu net username}"
+- TANZUNET_PASSWORD="{tanzu net password}"
 - PVT_REGISTRY="{private registry url. for dockerhub leave empty.}"
 - PVT_REGISTRY_USERNAME="{private registry username. for dockerhub same value as before}"
 - PVT_REGISTRY_PASSWORD="{private registry password}"
-- BUILD_SERVICE_VERSION={build service version. eg: 1.2.1}
-- BUILT_REGISTRY={the url of the registry where you want the build service to store built images}
-- BUILT_REGISTRY_USERNAME={username of the above registry}
-- BUILT_REGISTRY_PASSWORD="{password against the above username}"
-- TMC_API_TOKEN={needed if using TMC to access k8s cluster}
+- BUILD_SERVICE_VERSION=1.2.1{build service version. eg: 1.2.1}
+- TMC_API_TOKEN={needed if using TMC to access k8s cluster. Otherwise please ignore.}
 
 
 ## Install TBS on k8s cluster

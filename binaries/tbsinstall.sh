@@ -32,7 +32,7 @@ then
     docker login -u $PVT_REGISTRY_USERNAME $PVT_REGISTRY_URL -p $PVT_REGISTRY_PASSWORD 
 
     echo "Docker login: registry.pivotal.io"
-    docker login -u $PIVOTAL_REGISTRY_USERNAME registry.pivotal.io -p $PIVOTAL_REGISTRY_PASSWORD
+    docker login -u $TANZUNET_USERNAME registry.pivotal.io -p $TANZUNET_PASSWORD
 
 
     printf "\n\n\n**********Relocating images fron TanzuNet to PVT registry...***************\n"
@@ -47,8 +47,8 @@ then
         -v docker_repository="$PVT_REGISTRY" \
         -v docker_username="$PVT_REGISTRY_USERNAME" \
         -v docker_password="$PVT_REGISTRY_PASSWORD" \
-        -v tanzunet_username="$PIVOTAL_REGISTRY_USERNAME" \
-        -v tanzunet_password="$PIVOTAL_REGISTRY_PASSWORD" \
+        -v tanzunet_username="$TANZUNET_USERNAME" \
+        -v tanzunet_password="$TANZUNET_PASSWORD" \
         | kbld -f /tmp/bundle/.imgpkg/images.yml -f- \
         | kapp deploy -a tanzu-build-service -f- -y
 
