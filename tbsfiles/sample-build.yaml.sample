@@ -4,8 +4,8 @@ metadata:
   name: calcaddservice
   namespace: default
 spec:
-  tag: anahidcalcacr.azurecr.io/calcaddservice
-  serviceAccount: azure-registry-service-account
+  tag: {container-registry}/calcaddservice
+  serviceAccount: default-builder-sa
   builder:
     name: default-builder
     kind: Builder

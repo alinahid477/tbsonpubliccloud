@@ -18,25 +18,26 @@ In this repository I have created a bootstraped docker container that will
 **Please note:** *This installer does not work with ECR*
 
 ## Pre-Requisit
-The host computer with docker-ce or docker-ee installed.
+
+#### Docker engine
+The host computer must have docker-ce or docker-ee installed.
+
+#### TanzuNet account
+For this installation you will need access to registry.pivotal.io which is now under VMware Tanzu Network.
+
+- If you already have access then please login |  https://login.run.pivotal.io/login
+OR
+- Signup to create login (sign up is free) | shttps://account.run.pivotal.io/z/uaa/sign-up
+
+You will need login into Tanzu Net to accept EULA when you download the below in later section of this documentation
+- Build service dependency (aka descriptor) from here: https://network.pivotal.io/products/tbs-dependencies/
+- Tanzu Build Service (aka kpack or kp) from here: https://network.pivotal.io/products/build-service/
 
 
 ## Prepare
 This docker container is bootstrapped with TBS version 1.2. 
 
 At the time of writing/creating this tbs 1.2 was the latest version. 
-
-**Tanzu net access**
-
-For this installation you will need access to registry.pivotal.io which is now under VMware Tanzu Network.
-- If you already have access then please login  
-OR
-- Signup to create login (sign up is free)
-
-You will need login into Tanzu Net to accept EULA when you download the below in later section of this documentation
-- Build service dependency (aka descriptor)
-- Tanzu Build Service (aka kpack or kp)
-
 
 **TBS Descriptor**
 
@@ -94,30 +95,34 @@ The run command will execute the installation process. It may ask from TMC api t
 
 *I have tested several times installing on a EKS and AKS clusters and it worked without any error.*
 
-The installation process will
-- Install TBS on the k8s cluster
-- Configure TBS to connect to your private code repository (so TBS can get the code to build)
-- Configure TBS to connect to your private registry (where you would like TBS to push image after build is complete)
-- Confgure TBS with a `default-builder` to build and create image.
+**The TBSInstall wizard installation process will**
+- will first ask for confirmation by displaying namespaces of the connected k8s cluster.
+- it will also verify is k8s cluster already has tbs installed/deployed. If it finds an existing instance running it will mark it for NOT installing and display in the prompt.
+- If it does not find an existing installation it will ask for final confirmation before it starts installing.
+- Finally, it will start the installation process and display its progress in the prompt.
 
-This is just some default/sample builder I created to kick start things.
+**The tbsbuilderwizard will create TBS builder**
+- After the tbsinstall wizard finish installing/deploying TBS on the k8s cluster it will ask for confirmation to install a default tbs builder.
+- Once you confirm, it will lauch the intuitive wizard and guide you through the provisioning of TBS Builder.  
+- It will configure a TBS default builder to connect to your code repository (so TBS can get the code to build)
+- It will configure a TBS default builder to connect to your container registry (where you would like TBS to push image after build is complete)
+- Finally, it will deploy a TBS builder called `default-builder` in the cluster `default namespace`.
 
-You can create your own builders to build and create containers and push to different registries (or same registry) later on through interacting with TBS.
+***You can also use this tbsbuilderwizard (`~/binaries/tbsbuilderwizard.sh --wizard`) to deploy other builders on the k8s cluster later on***
 
+## Run a sample build
 
-## Interact with TBS on k8s cluster
+Once the above docker run finishes your k8s cluster should have TBS installed/deployed and a default builder configure which is ready to build.
 
-Once the above docker run finishes your k8s cluster should have TBS installed/deployed in it and configured with a sample/default builder and ready to build. The container then also proceeds to give shell access.
-
-When you get the shell access you can run commands to interact with the newly installed TBS.
-
+Once you get the bash access you can run commands to interact with the newly installed TBS.
 
 Create a yaml to tell TBS what to do. eg: ~/tbsfiles/sample-build.yaml
+
+*Do not forget to replace {container-registry} with your container registry*
 
 Then simply apply
 
 `kubectl apply -f ~/tbsfiles/sample-build.yaml`
-
 
 To watch how our build is progressing
 
@@ -128,11 +133,8 @@ Since, the pod is going to have several containers performing the build `kubectl
 `stern calcaddservice-build-1-624t7-build-pod`
 
 
-
 # That's it
 Simple enough.
-
-
 
 
 
