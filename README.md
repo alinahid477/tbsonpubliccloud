@@ -44,14 +44,15 @@ At the time of writing/creating this tbs 1.2 was the latest version.
 `tbsfiles/descriptor.yaml` may need updating (The one in this repo is version 100.0.24). Download updated descriptor from https://network.pivotal.io/products/tbs-dependencies/ and rename to descriptor.yaml (eg `mv ~/Downloads/descriptor-100.0.xx.yaml tbsfiles/descriptor.yaml`)
 
 
-**files requirements:**
+**Binary files**
 - bianaries/tmc ---> This is optional. Needed only if you are accessing cluster through the TMC kubeconfig then download the tmc binary and place it in the bianaries directory. If tmc cli is not needed please comment the lines (#39, #40) in the `Dockerfile`.
 - binaries/kp ---> download `kp-linux` from https://network.pivotal.io/products/build-service/ into binaries directory and rename to kp (`mv ~/Downloads/kp-linux binaries/kp`)
 
 
-**A k8s Cluster**
+**k8s Cluster**
 - Either create a dedicated cluster for TBS (using TMC, TKG, EKS, AKS, GKE)
-- OR, use an existing one to deploy TBS on it
+- OR, use an existing one 
+to deploy TBS on
 
 **kubeconfig file**
 
