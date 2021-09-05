@@ -61,46 +61,46 @@ then
 
 
 
-    printf "\n\n\n**********Starting configuration for deployed TBS with default-builder...**************\n"
+    # printf "\n\n\n**********Starting configuration for deployed TBS with default-builder...**************\n"
 
-    if [ -z "$GCR_SERVICE_ACCOUNT_PATH" ]
-    then
-        echo "Registry is NOT GCR."
-    else
-        echo "Registry is GCR."
-        export BUILT_REGISTRY_BUILDER_URL=$BUILT_REGISTRY\\/builder
-        sed -ri 's/^(\s*)(tag\s*:\s*builtregistryurl\s*$)/\1tag: '$BUILT_REGISTRY_BUILDER_URL'/' /usr/local/default-builder.yaml
+    # if [ -z "$GCR_SERVICE_ACCOUNT_PATH" ]
+    # then
+    #     echo "Registry is NOT GCR."
+    # else
+    #     echo "Registry is GCR."
+    #     export BUILT_REGISTRY_BUILDER_URL=$BUILT_REGISTRY\\/builder
+    #     sed -ri 's/^(\s*)(tag\s*:\s*builtregistryurl\s*$)/\1tag: '$BUILT_REGISTRY_BUILDER_URL'/' /usr/local/default-builder.yaml
 
-        printf "\n\n\n**********Creating k8s secret for container registry access...***************\n"
-        kp secret create built-registry-secret
-    fi
+    #     printf "\n\n\n**********Creating k8s secret for container registry access...***************\n"
+    #     kp secret create built-registry-secret
+    # fi
 
-    if [ -z "$BUILT_REGISTRY" ]
-    then
-        echo "Registry is DockerHub."
+    # if [ -z "$BUILT_REGISTRY" ]
+    # then
+    #     echo "Registry is DockerHub."
 
-        export BUILT_REGISTRY_BUILDER_URL=$BUILT_REGISTRY_USERNAME\\/builder
-        sed -ri 's/^(\s*)(tag\s*:\s*builtregistryurl\s*$)/\1tag: '$BUILT_REGISTRY_BUILDER_URL'/' /usr/local/default-builder.yaml
+    #     export BUILT_REGISTRY_BUILDER_URL=$BUILT_REGISTRY_USERNAME\\/builder
+    #     sed -ri 's/^(\s*)(tag\s*:\s*builtregistryurl\s*$)/\1tag: '$BUILT_REGISTRY_BUILDER_URL'/' /usr/local/default-builder.yaml
 
-        export DOCKER_PASSWORD=$BUILT_REGISTRY_PASSWORD
-        printf "\n\n\n**********Creating k8s secret for container registry access...***************\n"
-        kp secret create built-registry-secret --dockerhub $BUILT_REGISTRY_USERNAME
-    else
-        echo "Registry is either: ACR, Artifactory, Harbor, JFrog etc"
+    #     export DOCKER_PASSWORD=$BUILT_REGISTRY_PASSWORD
+    #     printf "\n\n\n**********Creating k8s secret for container registry access...***************\n"
+    #     kp secret create built-registry-secret --dockerhub $BUILT_REGISTRY_USERNAME
+    # else
+    #     echo "Registry is either: ACR, Artifactory, Harbor, JFrog etc"
 
-        export BUILT_REGISTRY_BUILDER_URL=$BUILT_REGISTRY\\/builder
-        sed -ri 's/^(\s*)(tag\s*:\s*builtregistryurl\s*$)/\1tag: '$BUILT_REGISTRY_BUILDER_URL'/' /usr/local/default-builder.yaml
+    #     export BUILT_REGISTRY_BUILDER_URL=$BUILT_REGISTRY\\/builder
+    #     sed -ri 's/^(\s*)(tag\s*:\s*builtregistryurl\s*$)/\1tag: '$BUILT_REGISTRY_BUILDER_URL'/' /usr/local/default-builder.yaml
 
-        export REGISTRY_PASSWORD=$BUILT_REGISTRY_PASSWORD
-        printf "\n\n\n**********Creating k8s secret for container registry access...***************\n"
-        kp secret create built-registry-secret --registry $BUILT_REGISTRY --registry-user $BUILT_REGISTRY_USERNAME
-    fi
+    #     export REGISTRY_PASSWORD=$BUILT_REGISTRY_PASSWORD
+    #     printf "\n\n\n**********Creating k8s secret for container registry access...***************\n"
+    #     kp secret create built-registry-secret --registry $BUILT_REGISTRY --registry-user $BUILT_REGISTRY_USERNAME
+    # fi
 
 
-    kubectl apply -f ~/tbsfiles/registry-service-account.yaml
+    # kubectl apply -f ~/tbsfiles/registry-service-account.yaml
 
-    printf "\n\n\n**********Deploying default-builder...****************\n"
-    kubectl apply -f /usr/local/default-builder.yaml
+    # printf "\n\n\n**********Deploying default-builder...****************\n"
+    # kubectl apply -f /usr/local/default-builder.yaml
 
     printf "\nCOMPLETE=YES" >> /root/.env
 
@@ -112,5 +112,3 @@ else
     printf "\n\n\nTBS installation is already marked as complete. (If this is not desired please change COMPLETE=\"\" or remove COMPLETE in the .env for new registration)\n"
     printf "\n\n\nGoing straight to shell access.\n"
 fi
-
-/bin/bash

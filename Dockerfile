@@ -21,15 +21,27 @@ RUN apt-get update && apt-get install -y \
 	&& curl -L https://github.com/wercker/stern/releases/download/$(curl -s https://api.github.com/repos/wercker/stern/releases/latest | grep tag_name | cut -d '"' -f 4)/stern_linux_amd64 -o /usr/local/bin/stern \
 	&& chmod +x /usr/local/bin/stern
 
+RUN curl -o /usr/local/bin/jq -L https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 && \
+  	chmod +x /usr/local/bin/jq
+
+ENV DOCKERVERSION=20.10.8
+RUN curl -fsSLO https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKERVERSION}.tgz \
+	&& tar xzvf docker-${DOCKERVERSION}.tgz --strip 1 \
+					-C /usr/local/bin docker/docker \
+	&& rm docker-${DOCKERVERSION}.tgz
+# RUN curl -sSL https://get.docker.com/ | sh
 
 # RUN curl -L https://raw.githubusercontent.com/alinahid477/VMW/main/tbs/carvel/install.sh | bash
 RUN curl -L https://carvel.dev/install.sh | bash
-RUN curl -sSL https://get.docker.com/ | sh
 
-COPY tbsfiles/default-builder.yaml /usr/local/
-COPY binaries/tbsinstall.sh /usr/local/
+
+
+
+COPY binaries/builder.template /usr/local/
+
+COPY binaries/init.sh /usr/local/
 COPY binaries/kp /usr/local/bin/ 
-RUN chmod +x /usr/local/bin/kp && chmod +x /usr/local/tbsinstall.sh
+RUN chmod +x /usr/local/bin/kp && chmod +x /usr/local/init.sh
 
 COPY binaries/tmc /usr/local/bin/
 RUN chmod +x /usr/local/bin/tmc
@@ -37,4 +49,4 @@ RUN chmod +x /usr/local/bin/tmc
 # COPY binaries/kubectl-vsphere /usr/local/bin/ 
 # RUN chmod +x /usr/local/bin/kubectl-vsphere
 
-ENTRYPOINT [ "/usr/local/tbsinstall.sh"]
+ENTRYPOINT [ "/usr/local/init.sh"]
