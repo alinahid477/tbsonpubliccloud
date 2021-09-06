@@ -37,8 +37,6 @@ else
     fi
 fi
 
-printf "$isexist\n\n"
-
 if [[ $isexist == "n" ]]
 then
     while true; do
