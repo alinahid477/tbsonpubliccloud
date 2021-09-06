@@ -1,5 +1,6 @@
 #!/bin/bash
 
+export $(cat /root/.env | xargs)
 unset doinstall
 
 printf "\n\nsetting executable permssion to all binaries sh\n\n"
@@ -17,7 +18,7 @@ while true; do
     esac
 done
 
-export $(cat /root/.env | xargs)
+
 printf "\n\nChecking if TBS is already installed on k8s cluster"
 isexist=$(kubectl get ns | grep -w build-service)
 if [[ -z $isexist ]]
