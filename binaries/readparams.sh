@@ -1,5 +1,15 @@
 #!/bin/bash
 
+unset defaultvalue_name 
+unset defaultvalue_k8s_namespace 
+unset defaultvalue_tag 
+unset defaultvalue_order 
+unset defaultvalue_cluster_stack 
+unset defaultvalue_cluster_store 
+unset defaultvalue_image_registry_secret_name 
+unset defaultvalue_git_secret_name
+ 
+
 helpFunction()
 {
     printf "\nProvide valid params\n\n"
