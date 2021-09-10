@@ -1,6 +1,21 @@
 #!/bin/bash
 export $(cat /root/.env | xargs)
 
+
+printf "\n\n\n***********Checking cluster ...*************\n"
+
+isexist=$(kubectl get ns | grep -w build-service)
+
+if [[ -n $isexist ]]
+then
+    printf "\nFound namespace builder-service in the cluster. Assuming build service is already installed on the cluster.\n"
+    printf "\nMarking as complete.\n"
+    printf "\nIf this is not desired please remove build-service namespace.\n"
+    printf "\nCOMPLETE=YES" >> /root/.env
+    COMPLETE='y'
+fi
+
+
 if [ -z "$COMPLETE" ]
 then
     printf "\n\n\n***********Starting installation of TBS $BUILD_SERVICE_VERSION ...*************\n"
