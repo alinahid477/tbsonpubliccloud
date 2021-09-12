@@ -7,32 +7,32 @@ lifecycle:
 clusterStores:
 - name: default
   sources:
-  - image: registry.pivotal.io/tanzu-go-buildpack/go@sha256:9fd3ba0f1f99f7dba25d22dc955233c7b38b7f1b55b038464968d1f1e37afd3d
-  - image: registry.pivotal.io/tanzu-java-buildpack/java@sha256:578bccbfc996184ea3181b4b0fa39f98f456db1e2e427ef163db98224cd9ea04
-  - image: registry.pivotal.io/tanzu-nodejs-buildpack/nodejs@sha256:c2b47f6f74055bade5456c17dd92c5ef035fab7e075d0ce0b14afc15b2efa06c
-  - image: registry.pivotal.io/tanzu-java-native-image-buildpack/java-native-image@sha256:74d8f4ba944ee1e62e7fc68654ee09fb89e0b26cb8eeda3a587322e9e7bd6bf5
+  - image: registry.pivotal.io/tanzu-go-buildpack/go@sha256:53b26a6d91d6f3736a1b54558b649ca09adce44c6f2cab1b31187a5b39f79753
+  - image: registry.pivotal.io/tanzu-java-buildpack/java@sha256:7e8e99f27f35944448f8141d07ba158c85b87242d9c9e347f6b108becfbcf552
+  - image: registry.pivotal.io/tanzu-nodejs-buildpack/nodejs@sha256:f0d17f5e374c1b14581bc3136d8c6f69d59ef3b35c92d7f247955ace22f932bc
+  - image: registry.pivotal.io/tanzu-java-native-image-buildpack/java-native-image@sha256:f634fd5c1bdf873fddc80a243e88b764fbaf7b274334416b638896c6c35f440c
   - image: registry.pivotal.io/tanzu-dotnet-core-buildpack/dotnet-core@sha256:6d57e312e7ac86f78ece4afcc3967e5314fbb71fe592800fd6f0f58bd923945a
   - image: registry.pivotal.io/tanzu-python-buildpack/python@sha256:1222d5f695222597687173b1b8612844f3ccd763eae86e99c3ebacc41390db40
-  - image: registry.pivotal.io/tanzu-procfile-buildpack/procfile-windows@sha256:996c5eeb5cc4f33a072588caaa48f247834471d8041f4557eab3d3862e1216c6
+  - image: registry.pivotal.io/tanzu-procfile-buildpack/procfile@sha256:0f34a11769a60568b7f1001f7bb99af6de50177aadd0241c486f59a1e90e0ee9
   - image: registry.pivotal.io/tbs-dependencies/tanzu-buildpacks_php@sha256:27f003c0ad6d45fd78cd9dbb71ae55b5ba1e599d8facfd98269dd29f42028870
   - image: registry.pivotal.io/tbs-dependencies/tanzu-buildpacks_nginx@sha256:5798dfecab8a4c67bbc3b956b6bef4474c52197b8949f02b8b866e19bfcde71e
   - image: registry.pivotal.io/tbs-dependencies/tanzu-buildpacks_httpd@sha256:4e15987d21d3d4f0cbc6be0d3b283db1d3f368eb15d0b1b59d835899c8bf946c
 clusterStacks:
 - name: tiny
   buildImage:
-    image: registry.pivotal.io/tanzu-tiny-bionic-stack/build@sha256:908e422910aa744b378c7e4ce34ef33a0e4fd6d64e7e4b8f2c2bd0aaa58e72f4
+    image: registry.pivotal.io/tanzu-tiny-bionic-stack/build@sha256:f0d638f9506d3fac6bd98324e982b113fd7866d6ff1186da71f0a95229bfa84f
   runImage:
-    image: registry.pivotal.io/tanzu-tiny-bionic-stack/run@sha256:c7cceda622d7cc84e85b61a4f4d243b28f7ebe9e12bb2dde705c36c6be9bf7db
+    image: registry.pivotal.io/tanzu-tiny-bionic-stack/run@sha256:782381e01067bce2169c50d648e69da9dff8c12fe408d4a3f475dac7e985a035
 - name: base
   buildImage:
-    image: registry.pivotal.io/tanzu-base-bionic-stack/build@sha256:26a255b910983771cb460cb197bedc4622812ed167357a56b860515b297e5c86
+    image: registry.pivotal.io/tanzu-base-bionic-stack/build@sha256:49ef507c9db9160a3dea0d07eb0649fe6b6f2a49561729a6e010718d4a978293
   runImage:
-    image: registry.pivotal.io/tanzu-base-bionic-stack/run@sha256:c6e071ac324b948037be8f950199e765a6b9eccce4e0b74f83f38755d528f534
+    image: registry.pivotal.io/tanzu-base-bionic-stack/run@sha256:8ee09c6154a8c9a99f5da07c317102f5c29ad9b1bf2b7742799eb51d9f1a2e56
 - name: full
   buildImage:
-    image: registry.pivotal.io/tanzu-full-bionic-stack/build@sha256:87bdc453d0de2750c102962e5a65279a5358d4ce7977b7468dd13060c9374551
+    image: registry.pivotal.io/tanzu-full-bionic-stack/build@sha256:e84fef8869a81171693d2923f2000942ef2cd248d73da8436bb968134bff10fc
   runImage:
-    image: registry.pivotal.io/tanzu-full-bionic-stack/run@sha256:62055249c46869261e41a74524fcacb4c0f011ab6008afcc0275d0f5f53a6cc5
+    image: registry.pivotal.io/tanzu-full-bionic-stack/run@sha256:4ce3f3423e72a638537e25dc25285315ce4bfb7721d2a131ba32ac2b98ba0521
 clusterBuilders:
 - name: base
   clusterStack: base

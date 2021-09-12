@@ -10,6 +10,15 @@ unset TBS_CLUSTERSTORE_NAME
 unset TBS_BUILDER_IMAGE_REGISTRY_SECRET
 unset TBS_BUILDER_GIT_SECRET
 
+unset defaultvalue_name 
+unset defaultvalue_k8s_namespace 
+unset defaultvalue_tag 
+unset defaultvalue_order 
+unset defaultvalue_cluster_stack 
+unset defaultvalue_cluster_store 
+unset defaultvalue_image_registry_secret_name 
+unset defaultvalue_git_secret_name
+
 result=$(source ~/binaries/readparams.sh $@)
 if [[ $result == *@("error"|"help")* ]]
 then
@@ -81,7 +90,7 @@ while true; do
         read -p "TBS Builder Namespace: " inp
         if [[ -z $inp ]]
         then
-            printf "\nThis is a required field. You must provide a value.\n"
+            inp=default
         else
             if [[ ! $inp =~ ^[A-Za-z0-9_\-]+$ ]]
             then
@@ -93,7 +102,7 @@ while true; do
     fi
     if [[ -n $inp ]]
     then
-        isexist=$(kubectl get ns | grep -w $inp)
+        isexist=$(kubectl get ns | grep -w "^$inp ")
         if [[ -z $isexist ]]
         then
             printf "\nNamespace name $inp does not exist. Attempting to create...\n\n"
@@ -128,7 +137,7 @@ then
             TBS_CLUSTERSTACK_NAME=$defaultclusterstack
             break
         else
-            if [[ $inp == *$availableclusterstacks* ]]
+            if [[ $inp == *($availableclusterstacks)* ]]
             then
                 TBS_CLUSTERSTACK_NAME=$inp
                 break
