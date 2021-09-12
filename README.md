@@ -72,7 +72,7 @@ And populate the below values:
 - PVT_REGISTRY="{private registry url. for dockerhub leave empty.}"
 - PVT_REGISTRY_USERNAME="{private registry username. for dockerhub same value as before}"
 - PVT_REGISTRY_PASSWORD="{private registry password}"
-- BUILD_SERVICE_VERSION=1.2.1{build service version. eg: 1.2.1}
+- BUILD_SERVICE_VERSION=1.2.2{build service version. eg: 1.2.2}
 - TMC_API_TOKEN={needed if using TMC to access k8s cluster. Otherwise please ignore.}
 
 

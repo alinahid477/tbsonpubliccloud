@@ -24,8 +24,85 @@ then
     kubectl get ns
 
     printf "\n\n\nAdjusting cluster with needed permissions...\n"
-    kubectl create clusterrolebinding default-tkg-admin-privileged-binding --clusterrole=psp:vmware-system-privileged --group=system:authenticated
-    kubectl apply -f ~/kubernetes/allow-runasnonroot-clusterrole.yaml
+    
+    printf "\nPOD security policy:\n"
+    unset tbspsp
+    isvmwarepsp=$(kubectl get psp | grep -w vmware-system-privileged)
+    if [[ -n $isvmwarepsp ]]
+    then
+        printf "found existing vmware-system-privileged as psp\n"
+        tbspsp=vmware-system-privileged
+    else
+        istmcpsp=$(kubectl get psp | grep -w vmware-system-tmc-privileged)
+        if [[ -n $istmcpsp ]]
+        then
+            printf "found existing vmware-system-tmc-privileged as psp\n"
+            tbspsp=vmware-system-tmc-privileged
+        # else
+        #     printf "Will create new psp called tbs-psp-privileged using ~/kubernetes/tbs-psp.priviledged.yaml\n"
+        #     tbspsp=tbs-psp-privileged
+            # kubectl apply -f ~/kubernetes/tbs-psp.priviledged.yaml
+        fi
+    fi
+    if [[ -z $SILENTMODE || $SILENTMODE == 'n' ]]
+    then
+        unset pspprompter
+        printf "\nList of available Pod Security Policies:\n"
+        kubectl get psp
+        if [[ -n $tbspsp ]]
+        then
+            printf "\nSelected existing pod security policy: $tbspsp"
+            printf "\nPress/Hit enter to accept $tbspsp"
+            pspprompter=" (selected $tbspsp)"  
+        else 
+            printf "\nHit enter to create a new one"          
+        fi
+        printf "\nOR\nType a name from the available list\n"
+        while true; do
+            read -p "pod security policy$pspprompter: " inp
+            if [[ -z $inp ]]
+            then
+                if [[ -z $tbspsp ]]
+                then 
+                    printf "\ncreating new psp called tbs-psp-privileged using ~/kubernetes/tbs-psp.priviledged.yaml\n"
+                    tbspsp=tbs-psp-privileged
+                    kubectl apply -f ~/kubernetes/tbs-psp.priviledged.yaml
+                    sleep 2
+                    break
+                else
+                    printf "\nAccepted psp: $tbspsp"
+                    break
+                fi
+            else
+                isvalidvalue=$(kubectl get psp | grep -w $inp)
+                if [[ -z $isvalidvalue ]]
+                then
+                    printf "\nYou must provide a valid input.\n"
+                else 
+                    tbspsp=$inp
+                    printf "\nAccepted psp: $tbspsp"
+                    break
+                fi
+            fi
+        done
+    fi
+    
+    if [[ -n $SILENTMODE && $SILENTMODE == 'y' ]]
+    then
+        if [[ -z $tbspsp ]]
+        then
+            printf "\ncreating new psp called tbs-psp-privileged using ~/kubernetes/tbs-psp.priviledged.yaml\n"
+            tbspsp=tbs-psp-privileged
+            kubectl apply -f ~/kubernetes/tbs-psp.priviledged.yaml
+            sleep 2
+        fi
+    fi
+    printf "\n\nusing psp $tbspsp to create ClusterRole and ClusterRoleBinding\n"
+    awk -v old="POD_SECURITY_POLICY_NAME" -v new="$tbspsp" 's=index($0,old){$0=substr($0,1,s-1) new substr($0,s+length(old))} 1' ~/kubernetes/allow-runasnonroot-clusterrole.yaml > /tmp/allow-runasnonroot-clusterrole.yaml
+    kubectl apply -f /tmp/allow-runasnonroot-clusterrole.yaml
+    printf "Done.\n"
+    # kubectl create clusterrolebinding default-tkg-admin-privileged-binding --clusterrole=psp:vmware-system-privileged --group=system:authenticated
+    # kubectl apply -f ~/kubernetes/allow-runasnonroot-clusterrole.yaml
 
     printf "\n\n\n**********Docker login...*************\n"
 
