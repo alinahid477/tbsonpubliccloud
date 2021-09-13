@@ -102,14 +102,31 @@ The run command will execute the installation process. It may ask from TMC api t
 - If it does not find an existing installation it will ask for final confirmation before it starts installing.
 - Finally, it will start the installation process and display its progress in the prompt.
 
-**The tbsbuilderwizard will create TBS builder**
-- After the tbsinstall wizard finish installing/deploying TBS on the k8s cluster it will ask for confirmation to install a default tbs builder.
-- Once you confirm, it will lauch the intuitive wizard and guide you through the provisioning of TBS Builder.  
-- It will configure a TBS default builder to connect to your code repository (so TBS can get the code to build)
-- It will configure a TBS default builder to connect to your container registry (where you would like TBS to push image after build is complete)
-- Finally, it will deploy a TBS builder called `default-builder` in the cluster `default namespace`.
+
+## TBS Builder Wizard
+
+TBS installation enables the ability to process build. However, TBS still need a definition construct to
+- What type of codes should it build
+- Where to get the codes from
+- Once process where to put it.
+AND that's the Builder Definition.
+
+Using this wizard you will be able to
+- Visually create TBS Builder Definition
+- Deploy the builder on the connected cluster
+
+To run the wizard do
+```
+~/binaries/tbsbuilderwizard.sh --wizard
+```
+
+Run the below command to see the what options are available
+```
+~/binaries/tbsbuilderwizard.sh --help
+```
 
 ***You can also use this tbsbuilderwizard (`~/binaries/tbsbuilderwizard.sh --wizard`) to deploy other builders on the k8s cluster later on***
+
 
 ## Run a sample build
 
@@ -124,6 +141,11 @@ Create a yaml to tell TBS what to do. eg: ~/tbsfiles/sample-build.yaml
 Then simply apply
 
 `kubectl apply -f ~/tbsfiles/sample-build.yaml`
+
+or
+
+`kp image save vmw-calculator-addservice-build --git https://github.com/alinahid477/vmw-calculator-addservice.git --git-revision main --tag PVT_REGISTRY_URL/calcaddservice --builder default-builder --wait`
+
 
 To watch how our build is progressing
 
