@@ -13,9 +13,12 @@ In this repository I have created a bootstraped docker container that will
 - Provide you with an intuitive UI to deploy TBS Builder (`~/binaries/tbsbuilderwizard --help`). This wizard can also work via parameters. This makes this docker suitable for pipeline automation too.
 - It also provides you bash access (from 2nd run onwards) for interacting with the TBS on a k8s cluster as well as the k8s cluster itself. 
 
-***This should simplify the Day0 tasks of installing a TBS on a k8s cluster.***
+**This should simplify the Day0 tasks of installing a TBS on a k8s cluster.**
 
 **Please note:** *This installer does not work with ECR*
+
+**Please note:** *If TBS is being deployed/installed on k8s running on vSphere, mount a 50GB volume at /var/lib to the worker nodes in the TanzuKubernetesCluster resource (Cluster yaml file). Follow instructions show how to configure storage on worker nodes: https://docs.vmware.com/en/VMware-vSphere/7.0/vmware-vsphere-with-tanzu/GUID-4E68C7F2-C948-489A-A909-C7A1F3DC545F.html*
+
 
 ## Pre-Requisit
 
@@ -35,13 +38,11 @@ You will need login into Tanzu Net to accept EULA when you download the below in
 
 
 ## Prepare
-This docker container is bootstrapped with TBS version 1.2. 
 
-At the time of writing/creating this tbs 1.2 was the latest version. 
 
 **TBS Descriptor**
-
-`tbsfiles/descriptor.yaml` may need updating (The one in this repo is version 100.0.24). Download updated descriptor from https://network.pivotal.io/products/tbs-dependencies/ and rename to descriptor.yaml (eg `mv ~/Downloads/descriptor-100.0.xx.yaml tbsfiles/descriptor.yaml`)
+- Download updated descriptor from https://network.pivotal.io/products/tbs-dependencies/ 
+- `mv ~/Downloads/descriptor-100.0.xx.yaml tbsfiles/`)
 
 
 **Binary files**
@@ -57,7 +58,7 @@ to deploy TBS on
 **kubeconfig file**
 
 A Kubeconfig file is needed to access the cluster. In this case:
-- I created the cluster using Tanzu Mission Control (TMC), hence I Downlaod the kubeconfig file from TMC and added TMC_API_TOKEN in .env file. *You can generate yours withever way suits best*
+- I created the cluster using Tanzu Mission Control (TMC), hence I Downlaod the kubeconfig file from TMC and added TMC_API_TOKEN in .env file. *You can generate yours whichever way suits best*
 - ***Place the kubeconfig in a file named `config` in the `.kube` folder. Filenale MUST be 'config' (no extension).***
 
 
@@ -72,8 +73,8 @@ And populate the below values:
 - PVT_REGISTRY="{private registry url. for dockerhub leave empty.}"
 - PVT_REGISTRY_USERNAME="{private registry username. for dockerhub same value as before}"
 - PVT_REGISTRY_PASSWORD="{private registry password}"
-- BUILD_SERVICE_VERSION=1.2.2{build service version. eg: 1.2.2}
-- TMC_API_TOKEN={needed if using TMC to access k8s cluster. Otherwise please ignore.}
+- BUILD_SERVICE_VERSION=1.2.2 {build service version. eg: 1.2.2}
+- TMC_API_TOKEN={*optional.* needed only if using TMC to access k8s cluster. Otherwise please ignore or delete.}
 
 
 ## Install TBS on k8s cluster
