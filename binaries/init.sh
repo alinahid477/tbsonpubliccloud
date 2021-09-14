@@ -6,6 +6,14 @@ unset doinstall
 printf "\n\nsetting executable permssion to all binaries sh\n\n"
 ls -l /root/binaries/*.sh | awk '{print $9}' | xargs chmod +x
 
+printf "\n\nChecking dependencies...\n\n"
+isexist=$(ls ~/binaries | grep '^kp$')
+if [[ -z $isexist ]]
+then
+    printf "\nError: required binary kp not found in ~/binaries dir."
+    exit
+fi
+
 printf "\n\nChecking connected k8s cluster\n\n"
 kubectl get ns
 printf "\n"

@@ -20,6 +20,47 @@ if [ -z "$COMPLETE" ]
 then
     printf "\n\n\n***********Starting installation of TBS $BUILD_SERVICE_VERSION ...*************\n"
 
+
+    printf "\n\nChecking dependencies...\n\n"
+    selectedTBSdescriptor=$(ls -t tbsfiles/ | grep '^descriptor-' | awk 'NR==1{print $1}')
+    if [[ -z $selectedTBSdescriptor ]]
+    then
+        printf "\nno descriptor detected in ~/tbsfiles dir.\n"
+        printf "\nPlease ensure to have a descriptor file with this naming convention \"descriptor-xxx.x.xxx\"\n in ~/tbsfiles dir.\n"
+        printf "\nTo install the latest descriptor do the below in you host machine:"
+        echo -r "\tvisit: https://network.pivotal.io/products/tbs-dependencies/"
+        echo -r "\tDownload descriptor-xxx.x.xxx.yaml file"
+        echo -r "\tmv ~/Downloads/descriptor-xxx.x.xxx.yaml tbsfiles/"
+        exit
+    else
+        printf "\nFound latest descriptor ~/tbsfile/$selectedTBSdescriptor\n"
+        if [[ -z $SILENTMODE || $SILENTMODE == 'n' ]]
+        then
+            printf "\nHit/Press enter to accept the descriptor"
+            printf "\nOR"
+            printf "\nType the name of the descriptor file (and ensure that the file exists in ~/tbsfiles)"
+            printf "\n"
+            while true; do
+                read -p "descriptor name (default $selectedTBSdescriptor): " inp
+                if [[ -n $inp ]]
+                then
+                    isexist=$(ls -t tbsfiles/ | grep '^'$inp'$')
+                    if [[ -n $isexist ]]
+                    then
+                        selectedTBSdescriptor=$inp
+                        break
+                    else
+                        printf "\nError: No such file in ~/tbsfiles directory\n"
+                    fi
+                else
+                    break
+                fi
+            done
+        fi    
+    fi
+    printf "\nAccepted descriptor: $selectedTBSdescriptor\n"
+
+
     printf "\n\n\nTBS will be installed on the below cluster:\n"
     kubectl get ns
 
@@ -87,6 +128,8 @@ then
         done
     fi
     
+    
+
     if [[ -n $SILENTMODE && $SILENTMODE == 'y' ]]
     then
         if [[ -z $tbspsp ]]
