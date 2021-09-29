@@ -83,15 +83,22 @@ The docker file
 - has all necessary dependencies (eg> kubectl, ytt, kapp, docker, awscli, stern etc) resolved
 - has a install.sh that reads input needed from the .env file
 
-All you need to do is run.
+To run on windows
 
 ```
-docker build . -t tbsonpubliccloud
-docker run -it --rm -v ${PWD}:/root/ -v /var/run/docker.sock:/var/run/docker.sock --name tbsonpubliccloud tbsonpubliccloud /bin/bash
+start.bat tbs {forcebuild}
 ```
 
-The build command will build the docker container with all necessary elements for TBS installation on your k8s cluster.
-The run command will execute the installation process. It may ask from TMC api token. So please have it handy.
+OR
+
+To run on Mac or Linux
+```
+chmod +x start.sh
+./start.sh tbs {forcebuild}
+```
+
+***use `forcebuild` to force docker build. Otherwise if the image exists it will ignore building.***
+
 
 ***The installation process will run for few mins. Please be patient and check the output to spot any error***. 
 
