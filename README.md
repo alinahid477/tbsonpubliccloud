@@ -22,6 +22,16 @@ In this repository I have created a bootstraped docker container that will
 
 ## Pre-Requisit
 
+
+### vSphere Tanzu Kubernetes Grid Environment
+
+***This step is ONLY required for TKG on vSphere envieonment. Skip this section if you are deploying Tanzu Build Service (TBS) on a public cloud cluster***
+
+
+Ensure that all worker nodes have at least 50 GB of ephemeral storage allocated to them.
+- To do this on TKGs (vSphere with Tanzu), mount a 50GB volume at /var/lib to the worker nodes in the TanzuKubernetesCluster resource that corresponds to your TKGs cluster. [These instructions](https://docs.vmware.com/en/VMware-vSphere/7.0/vmware-vsphere-with-tanzu/GUID-4E68C7F2-C948-489A-A909-C7A1F3DC545F.html) show how to configure storage on worker nodes.
+
+
 #### Docker engine
 The host computer must have docker-ce or docker-ee installed.
 
@@ -40,34 +50,43 @@ You will need login into Tanzu Net to accept EULA when you download the below in
 ## Prepare
 
 
-**TBS Descriptor**
+### TBS Descriptor
 - Download updated descriptor from https://network.pivotal.io/products/tbs-dependencies/ 
 - `mv ~/Downloads/descriptor-100.0.xx.yaml tbsfiles/`)
+- ***Make sure that in the tbsfiles dir only 1 descriptor exists***
 
 
-**Binary files**
+### Binary files
 - bianaries/tmc ---> This is optional. Needed only if you are accessing cluster through the TMC kubeconfig then download the tmc binary and place it in the bianaries directory. If tmc cli is not needed please comment the lines (#39, #40) in the `Dockerfile`.
 - binaries/kp ---> download `kp-linux` from https://network.pivotal.io/products/build-service/ into binaries directory and rename to kp (`mv ~/Downloads/kp-linux binaries/kp`)
 
 
-**k8s Cluster**
+### k8s Cluster
 - Either create a dedicated cluster for TBS (using TMC, TKG, EKS, AKS, GKE)
 - OR, use an existing one 
 to deploy TBS on
 
-**kubeconfig file**
+### kubeconfig file
+
+***Skip this section if you are deploying TBS on a vSphere with Tanzu (TKGs) cluster using vSphere SSO. In which case fill in the TKG variables in the .env file (as described in the next section)***
 
 A Kubeconfig file is needed to access the cluster. In this case:
 - I created the cluster using Tanzu Mission Control (TMC), hence I Downlaod the kubeconfig file from TMC and added TMC_API_TOKEN in .env file. *You can generate yours whichever way suits best*
 - ***Place the kubeconfig in a file named `config` in the `.kube` folder. Filenale MUST be 'config' (no extension).***
 
 
-**.env file**
+## .env file
 
 Rename the .env.sample to .env. (eg: `mv .env.sample .env`)
 
 And populate the below values:
-
+- BASTION_HOST={(Optional) ip of bastion/jump host. *Leave empty if you have direct connection*}
+- BASTION_USERNAME={(Optional) if the above is present then the username for the above. *Leave empty if you have direct connection*}
+- TKG_VSPHERE_SUPERVISOR_ENDPOINT={(Optional) find the supervisor endpoint from vsphere (eg: Menu>Workload management>clusters>Control Plane Node IP Address). *Leave empty if you are providing your own kubeconfig file in the .kube directory*}
+- TKG_VSPHERE_CLUSTER_NAME={(Optional) the k8s cluster your are trying to access. *Leave empty if you are providing your own kubeconfig file in the .kube directory*}
+- TKG_VSPHERE_CLUSTER_ENDPOINT={(Optional) endpoint ip or hostname of the above cluster. Grab it from your vsphere environment. (Menu>Workload Management>Namespaces>Select the namespace where the k8s cluster resides>Compute>VMware Resources>Tanzu Kubernetes Clusters>Control Plane Address[grab the ip of the desired k8s]). *Leave empty or ignore if you are providing your own kubeconfig file in the .kube directory*}
+- TKG_VSPHERE_USERNAME={(Optional) username for accessing the cluster. *Leave empty or ignore if you are providing your own kubeconfig file in the .kube directory*}
+- TKG_VSPHERE_PASSWORD={(Optional) password for accessing the cluster. *Leave empty or ignore if you are providing your own kubeconfig file in the .kube directory*}
 - TANZUNET_USERNAME="{tanzu net username}"
 - TANZUNET_PASSWORD="{tanzu net password}"
 - PVT_REGISTRY="{private registry url. for dockerhub leave empty.}"
@@ -86,7 +105,7 @@ The docker file
 To run on windows
 
 ```
-start.bat tbs {forcebuild}
+start.bat tbs
 ```
 
 OR
@@ -94,15 +113,15 @@ OR
 To run on Mac or Linux
 ```
 chmod +x start.sh
-./start.sh tbs {forcebuild}
+./start.sh tbs
 ```
 
-***use `forcebuild` to force docker build. Otherwise if the image exists it will ignore building.***
+***Optionally use a second parameter `forcebuild` to force docker build (eg: `start.sh tbs forecebuild`). Otherwise if the image exists it will ignore building.***
 
 
 ***The installation process will run for few mins. Please be patient and check the output to spot any error***. 
 
-*I have tested several times installing on a EKS and AKS clusters and it worked without any error.*
+*I have tested several times installing on a EKS, AKS, TKG clusters and it worked without any error.*
 
 **The TBSInstall wizard installation process will**
 - will first ask for confirmation by displaying namespaces of the connected k8s cluster.

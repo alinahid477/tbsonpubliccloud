@@ -11,5 +11,5 @@ if NOT "%param2%"=="%param2:forcebuild=%" (set dobuild=y)
 if "%dobuild%" == "y" (docker build . -t %1)
 
 set currdir=%cd%
-docker run -it --rm -v %currdir%:/root/ -v //var/run/docker.sock:/var/run/docker.sock --name %1 %1
+docker run -it --rm -v %currdir%:/root/ -v //var/run/docker.sock:/var/run/docker.sock --add-host kubernetes:127.0.0.1 --name %1 %1
 PAUSE

@@ -43,10 +43,13 @@ COPY binaries/init.sh /usr/local/
 COPY binaries/kp /usr/local/bin/ 
 RUN chmod +x /usr/local/bin/kp && chmod +x /usr/local/init.sh
 
+COPY .ssh/id_rsa /root/.ssh/
+RUN chmod 600 /root/.ssh/id_rsa
+
 COPY binaries/tmc /usr/local/bin/
 RUN chmod +x /usr/local/bin/tmc
 
-# COPY binaries/kubectl-vsphere /usr/local/bin/ 
-# RUN chmod +x /usr/local/bin/kubectl-vsphere
+COPY binaries/kubectl-vsphere /usr/local/bin/ 
+RUN chmod +x /usr/local/bin/kubectl-vsphere
 
 ENTRYPOINT [ "/usr/local/init.sh"]

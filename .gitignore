@@ -5,10 +5,11 @@
 .tanzu
 .local
 .azure
-.ssh
 .bak
 .nogit
 
+.ssh/*
+!.ssh/.gitkeep
 .docker/*
 !.docker/.gitkeep
 .kube/*
